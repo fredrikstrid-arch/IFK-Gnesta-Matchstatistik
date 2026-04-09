@@ -2,138 +2,352 @@
 <html lang="sv">
 <head>
 <meta charset="UTF-8">
-
-<!-- ✅ Mobil-optimerad viewport -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-
-<title>Zon App</title>
+<title>Matchstatistik</title>
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 <style>
-body{
-  margin:0;
-  padding:10px;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  min-height:100vh;
-  background:#f5f5f5;
-  font-family:Arial;
-}
+  :root {
+    --primary: #2563eb;
+    --primary-hover: #1d4ed8;
+    --bg-color: #f3f4f6;
+    --card-bg: #ffffff;
+    --text-main: #1f2937;
+    --text-muted: #6b7280;
+    --danger: #ef4444;
+    --success: #10b981;
+    --radius: 16px;
+    --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  }
 
-#teamSelect{
-  position:fixed;
-  inset:0;
-  background:linear-gradient(135deg,#1e3c72,#2a5298);
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  z-index:50;
-}
+  * {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+  }
 
-.card{
-  background:white;
-  padding:20px;
-  border-radius:12px;
-  width:90%;
-  max-width:260px;
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-}
+  body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg-color);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: var(--text-main);
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+  }
 
-.card input{
-  padding:12px;
-  font-size:16px;
-  border-radius:8px;
-  border:1px solid #ccc;
-}
+  /* --- Start Screen --- */
+  #teamSelect {
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 50;
+  }
 
-.court{
-  position:relative;
-  width:95vw;
-  max-width:360px;
-  background:white;
-  border-radius:16px;
-  padding:10px;
-  box-shadow:0 10px 30px rgba(0,0,0,.2);
-}
+  .card {
+    background: var(--card-bg);
+    padding: 30px 20px;
+    border-radius: var(--radius);
+    width: 90%;
+    max-width: 320px;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    text-align: center;
+  }
 
-.zone{position:absolute;cursor:pointer}
-.z1{bottom:45%;left:3%;width:20%;height:18%}
-.z2{bottom:45%;left:25%;width:50%;height:18%}
-.z3{bottom:45%;right:3%;width:20%;height:18%}
-.z4{bottom:40%;left:3%;width:94%;height:9%}
-.z5{bottom:30%;left:3%;width:94%;height:9%}
-.z6{bottom:12%;left:3%;width:20%;height:18%}
-.z7{bottom:12%;left:25%;width:50%;height:18%}
-.z8{bottom:12%;right:3%;width:20%;height:18%}
+  .card::before {
+    content: "Zon App";
+    font-size: 24px;
+    font-weight: bold;
+    color: var(--primary);
+    margin-bottom: 5px;
+  }
 
-.score{
-  text-align:center;
-  margin-bottom:10px;
-  white-space:pre-line;
-}
+  .card input {
+    padding: 14px;
+    font-size: 16px;
+    border-radius: 10px;
+    border: 1px solid #d1d5db;
+    outline: none;
+    transition: border-color 0.2s;
+    text-align: center;
+  }
 
-button{
-  font-size:16px;
-}
+  .card input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  }
 
-.nextBtn{
-  margin-top:10px;
-  padding:12px;
-  border:none;
-  border-radius:10px;
-  background:linear-gradient(135deg,#1e3c72,#2a5298);
-  color:white;
-  font-weight:bold;
-  cursor:pointer;
-}
+  /* --- Main Court Area --- */
+  .court-wrapper {
+    width: 100%;
+    max-width: 420px;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
 
-.overlay{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.6);
-  display:none;
-}
+  .scoreboard {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    padding: 20px;
+    box-shadow: var(--shadow);
+    text-align: center;
+  }
 
-.popup{
-  position:fixed;
-  top:50%;
-  left:50%;
-  transform:translate(-50%,-50%);
-  background:linear-gradient(135deg,#1e3c72,#2a5298);
-  color:white;
-  padding:20px;
-  border-radius:20px;
-  width:90vw;
-  max-width:320px;
-  display:none;
-}
+  #teams {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 10px;
+  }
 
-.popup button{
-  width:100%;
-  padding:14px;
-  margin:6px 0;
-  border:none;
-  border-radius:10px;
-  background:rgba(255,255,255,0.2);
-  color:white;
-}
+  .score-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 15px;
+  }
 
-.row{display:flex;gap:8px}
+  #periodDisplay {
+    background: #e0e7ff;
+    color: var(--primary);
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: bold;
+  }
 
-.numpad{
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:8px;
-}
+  #score {
+    font-size: 36px;
+    font-weight: 800;
+    letter-spacing: 2px;
+  }
 
-.numpad button{
-  padding:18px;
-  font-size:20px;
-}
+  .board-actions {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 10px;
+  }
+
+  .court {
+    position: relative;
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    padding: 10px;
+    box-shadow: var(--shadow);
+  }
+
+  .court img {
+    border-radius: 8px;
+    display: block;
+  }
+
+  /* Zones */
+  .zone {
+    position: absolute;
+    cursor: pointer;
+    background: rgba(37, 99, 235, 0.0); /* Invisible but clickable */
+    transition: background 0.2s;
+  }
+  .zone:active {
+    background: rgba(37, 99, 235, 0.2);
+    border-radius: 8px;
+  }
+  .z1 { bottom: 61%; left: 3%; width: 20%; height: 22%; }
+  .z2 { bottom: 61%; left: 25%; width: 49%; height: 22%; }
+  .z3 { bottom: 61%; right: 5%; width: 20%; height: 22%; }
+  .z4 { bottom: 52%; left: 3%; width: 94%; height: 9%; }
+  .z5 { bottom: 40%; left: 3%; width: 94%; height: 9%; }
+  .z6 { bottom: 16%; left: 3%; width: 20%; height: 22%; }
+  .z7 { bottom: 16%; left: 25%; width: 49%; height: 22%; }
+  .z8 { bottom: 16%; right: 5%; width: 20%; height: 22%; }
+
+  /* --- Buttons --- */
+  button {
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: 600;
+    padding: 14px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  button:active {
+    transform: scale(0.96);
+  }
+
+  .card button, .nextBtn, .popup > button, #followup button, .board-actions button {
+    background: var(--primary);
+    color: white;
+  }
+
+  .card button:hover, .nextBtn:hover, .board-actions button:nth-child(2):hover {
+    background: var(--primary-hover);
+  }
+
+  .board-actions button:first-child {
+    background: #e5e7eb;
+    color: var(--text-main);
+  }
+
+  /* --- Modals & Overlays --- */
+  .overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    display: none;
+    z-index: 100;
+    animation: fadeIn 0.2s ease;
+  }
+
+  .popup {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.95);
+    background: var(--card-bg);
+    color: var(--text-main);
+    padding: 24px;
+    border-radius: var(--radius);
+    width: 90vw;
+    max-width: 340px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    display: none;
+    z-index: 101;
+    animation: popIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  .popup h3 {
+    margin: 0 0 20px 0;
+    font-size: 20px;
+    text-align: center;
+    color: var(--text-main);
+  }
+
+  .popup button {
+    width: 100%;
+    margin: 6px 0;
+  }
+
+  .row {
+    display: flex;
+    gap: 10px;
+    margin-top: 6px;
+  }
+
+  .row button {
+    background: #f3f4f6;
+    color: var(--text-main);
+    border: 1px solid #e5e7eb;
+  }
+
+  .row button:active {
+    background: #e5e7eb;
+  }
+
+  /* --- Numpad Styles --- */
+  #followup {
+    margin-top: 10px;
+  }
+
+  #inputLabel {
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    font-size: 13px;
+    letter-spacing: 1px;
+  }
+
+  #display {
+    background: #f9fafb;
+    border: 2px solid #e5e7eb;
+    border-radius: 10px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 15px;
+    color: var(--primary);
+  }
+
+  .numpad {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+
+  .numpad button {
+    background: white;
+    color: var(--text-main);
+    border: 1px solid #e5e7eb;
+    padding: 16px;
+    font-size: 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+  }
+
+  .numpad button:active {
+    background: #f3f4f6;
+  }
+
+  /* Special style for 'C' and 'OK' generated by JS */
+  .numpad button:nth-last-child(3) {
+    color: var(--danger);
+    background: #fef2f2;
+    border-color: #fecaca;
+  }
+  .numpad button:last-child {
+    color: white;
+    background: var(--success);
+    border-color: var(--success);
+  }
+
+  /* --- Stats Popup --- */
+  #statPopup {
+    text-align: center;
+  }
+  #timer {
+    font-size: 32px;
+    font-weight: bold;
+    color: var(--primary);
+    margin: 10px 0 20px;
+    font-variant-numeric: tabular-nums;
+  }
+  #statContent {
+    background: #f9fafb;
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    font-size: 15px;
+    line-height: 1.6;
+    text-align: left;
+    border: 1px solid #e5e7eb;
+  }
+
+  /* Animations */
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes popIn { 
+    from { opacity: 0; transform: translate(-50%, -45%) scale(0.95); } 
+    to { opacity: 1; transform: translate(-50%, -50%) scale(1); } 
+  }
 </style>
 </head>
 
@@ -141,31 +355,36 @@ button{
 
 <div id="teamSelect">
   <div class="card">
-    <input id="teamInput" placeholder="Motståndare">
+    <input id="teamInput" placeholder="Motståndarens namn">
     <button onclick="startMatch()">Starta match</button>
   </div>
 </div>
 
-<div class="court">
-  <div class="score">
+<div class="court-wrapper">
+  <div class="scoreboard">
     <div id="teams">IFK Gnesta vs -</div>
-    <div id="periodDisplay">Period 1</div>
-    <div id="score">0 - 0</div>
-
-    <button onclick="exportExcel()" style="margin-top:8px;">Spara</button>
-    <button class="nextBtn" onclick="nextPeriod()">Nästa period</button>
+    <div class="score-center">
+      <div id="periodDisplay">Period 1</div>
+      <div id="score">0 - 0</div>
+    </div>
+    <div class="board-actions">
+      <button onclick="exportExcel()">Spara</button>
+      <button class="nextBtn" onclick="nextPeriod()">Nästa period</button>
+    </div>
   </div>
 
-  <img src="Court.png" width="100%">
+  <div class="court">
+    <img src="Court.png" width="100%" alt="Spelplan">
 
-  <div class="zone z1" onclick="openPopup('Zon 1')"></div>
-  <div class="zone z2" onclick="openPopup('Zon 2')"></div>
-  <div class="zone z3" onclick="openPopup('Zon 3')"></div>
-  <div class="zone z4" onclick="openPopup('Zon 4')"></div>
-  <div class="zone z5" onclick="openPopup('Zon 5')"></div>
-  <div class="zone z6" onclick="openPopup('Zon 6')"></div>
-  <div class="zone z7" onclick="openPopup('Zon 7')"></div>
-  <div class="zone z8" onclick="openPopup('Zon 8')"></div>
+    <div class="zone z1" onclick="openPopup('Zon 1')"></div>
+    <div class="zone z2" onclick="openPopup('Zon 2')"></div>
+    <div class="zone z3" onclick="openPopup('Zon 3')"></div>
+    <div class="zone z4" onclick="openPopup('Zon 4')"></div>
+    <div class="zone z5" onclick="openPopup('Zon 5')"></div>
+    <div class="zone z6" onclick="openPopup('Zon 6')"></div>
+    <div class="zone z7" onclick="openPopup('Zon 7')"></div>
+    <div class="zone z8" onclick="openPopup('Zon 8')"></div>
+  </div>
 </div>
 
 <div class="overlay" id="overlay" onclick="closePopup()"></div>
@@ -187,99 +406,85 @@ button{
 
 <div class="popup" id="statPopup">
   <h3>Period slut</h3>
-  <div id="timer" style="text-align:center;font-size:20px;margin-bottom:10px;">00:00</div>
+  <div id="timer">00:00</div>
   <div id="statContent"></div>
-  <button onclick="startNextPeriod()">Nästa period</button>
+  <button onclick="startNextPeriod()">Starta nästa period</button>
 </div>
 
 <script>
+// Hjälpfunktion för att hämta element säkert
+const el = (id) => document.getElementById(id);
+
 var scoreA=0, scoreB=0;
 var currentZone="";
 var stats=[];
 var period=1;
 var periodStats={1:[],2:[],3:[]};
-
-var shotsOff=0, shotsDef=0;
-var blockedOff=0, blockedDef=0;
-
 var opponentName="";
 
-/* TIMER */
-var timerInterval;
-var secondsElapsed = 0;
+var timerInterval, secondsElapsed=0;
 
 function startTimer(){
-  secondsElapsed = 0;
+  secondsElapsed=0;
   updateTimer();
-
   clearInterval(timerInterval);
-  timerInterval = setInterval(function(){
-    secondsElapsed++;
-    updateTimer();
-  },1000);
+  timerInterval=setInterval(()=>{secondsElapsed++;updateTimer();},1000);
 }
 
 function updateTimer(){
-  var min = Math.floor(secondsElapsed / 60);
-  var sec = secondsElapsed % 60;
-
-  document.getElementById("timer").innerText =
-    String(min).padStart(2,'0') + ":" + String(sec).padStart(2,'0');
+  let m=Math.floor(secondsElapsed/60);
+  let s=secondsElapsed%60;
+  el('timer').innerText=String(m).padStart(2,'0')+":"+String(s).padStart(2,'0');
 }
 
-function stopTimer(){
-  clearInterval(timerInterval);
-}
+function stopTimer(){clearInterval(timerInterval);}
 
 function startMatch(){
-  var val=document.getElementById("teamInput").value.trim();
-  if(!val){alert("Ange motståndare");return;}
-
+  let val = el('teamInput').value.trim();
+  if(!val) return alert("Ange motståndare");
   opponentName = val;
-  document.getElementById("teams").innerText="IFK Gnesta vs "+opponentName;
-  document.getElementById("teamSelect").style.display="none";
+  el('teams').innerText = "IFK Gnesta vs " + val;
+  el('teamSelect').style.display = "none";
 }
 
 function openPopup(z){
-  currentZone=z;
-  zoneTitle.innerText=z;
-  popup.style.display="block";
-  overlay.style.display="block";
-
-  followup.innerHTML="";
-  document.getElementById("shotRow").style.display="flex";
+  currentZone = z;
+  el('zoneTitle').innerText = z;
+  el('popup').style.display = "block";
+  el('overlay').style.display = "block";
+  el('followup').innerHTML = "";
+  el('shotRow').style.display = "flex";
 }
 
 function closePopup(){
-  popup.style.display="none";
-  overlay.style.display="none";
+  el('popup').style.display = "none";
+  el('overlay').style.display = "none";
 }
 
 function selectAction(a){
+  let isOff = ['Zon 1','Zon 2','Zon 3','Zon 4'].includes(currentZone);
 
-  var isOff=['Zon 1','Zon 2','Zon 3','Zon 4'].includes(currentZone);
-
-  if(a==="Skott"){
-    if(isOff) shotsOff++; else shotsDef++;
-    stats.push({zon:currentZone,typ:"Skott"});
-    periodStats[period].push({zon:currentZone,typ:"Skott"});
+  if(a === "Skott"){
+    let team = isOff ? "IFK Gnesta" : opponentName;
+    let obj = {zon: currentZone, typ: "Skott", lag: team};
+    stats.push(obj);
+    periodStats[period].push(obj);
     closePopup(); return;
   }
 
-  if(a==="Täck"){
-    if(isOff) blockedOff++; else blockedDef++;
-    stats.push({zon:currentZone,typ:"Skott i täck"});
-    periodStats[period].push({zon:currentZone,typ:"Skott i täck"});
+  if(a === "Täck"){
+    let team = isOff ? "IFK Gnesta" : opponentName;
+    let obj = {zon: currentZone, typ: "Skott i täck", lag: team};
+    stats.push(obj);
+    periodStats[period].push(obj);
     closePopup(); return;
   }
 
-  if(a==="Mål"){
-    document.getElementById("shotRow").style.display="none";
-
-    followup.innerHTML="";
+  if(a === "Mål"){
+    el('shotRow').style.display = "none";
 
     if(isOff){
-      followup.innerHTML=
+      el('followup').innerHTML=
         "<button onclick=\"showLines('Mål','Direkt')\">Direkt</button>"+
         "<button onclick=\"showLines('Mål','Övrigt')\">Övrigt</button>";
     }else{
@@ -289,16 +494,15 @@ function selectAction(a){
 }
 
 function showLines(type,sub){
-
-  var isOff=['Zon 1','Zon 2','Zon 3','Zon 4'].includes(currentZone);
+  let isOff = ['Zon 1','Zon 2','Zon 3','Zon 4'].includes(currentZone);
 
   if(isOff){
-    followup.innerHTML=
+    el('followup').innerHTML=
       "<button onclick=\"prepareGoal('"+type+"','"+sub+"','1')\">1 line</button>"+
       "<button onclick=\"prepareGoal('"+type+"','"+sub+"','2')\">2 line</button>"+
       "<button onclick=\"prepareGoal('"+type+"','"+sub+"','3')\">3 line</button>";
   }else{
-    followup.innerHTML=
+    el('followup').innerHTML=
       "<button onclick=\"register('"+type+"','"+sub+"','1')\">1 line</button>"+
       "<button onclick=\"register('"+type+"','"+sub+"','2')\">2 line</button>"+
       "<button onclick=\"register('"+type+"','"+sub+"','3')\">3 line</button>";
@@ -310,121 +514,114 @@ var currentInput="", scorer="", assist="", step="scorer";
 function prepareGoal(type,sub,line){
   currentInput=""; scorer=""; assist=""; step="scorer";
 
-  followup.innerHTML=`
+  el('followup').innerHTML=`
     <div style="text-align:center">
       <div id="inputLabel">Målskytt</div>
       <div id="display"></div>
       <div class="numpad">${createPad(type,sub,line)}</div>
-    </div>
-  `;
+    </div>`;
 }
 
 function createPad(type,sub,line){
-  let html="";
-  for(let i=1;i<=9;i++) html+=`<button onclick="press(${i})">${i}</button>`;
-  html+=`<button onclick="clearNum()">C</button>
-         <button onclick="press(0)">0</button>
-         <button onclick="next('${type}','${sub}','${line}')">OK</button>`;
-  return html;
+  let h="";
+  for(let i=1; i<=9; i++) h+=`<button onclick="press(${i})">${i}</button>`;
+  h+=`<button onclick="clearNum()">C</button>
+      <button onclick="press(0)">0</button>
+      <button onclick="next('${type}','${sub}','${line}')">OK</button>`;
+  return h;
 }
 
-function press(n){currentInput+=n;display.innerText=currentInput;}
-function clearNum(){currentInput="";display.innerText="";}
+function press(n){
+  currentInput += n;
+  el('display').innerText = currentInput;
+}
+
+function clearNum(){
+  currentInput = "";
+  el('display').innerText = "";
+}
 
 function next(type,sub,line){
-  if(step==="scorer"){
-    scorer=currentInput; currentInput="";
-    display.innerText="";
-    inputLabel.innerText="Assist";
-    step="assist"; return;
+  if(step === "scorer"){
+    scorer = currentInput;
+    currentInput = "";
+    el('display').innerText = "";
+    el('inputLabel').innerText = "Assist";
+    step = "assist";
+    return;
   }
-  assist=currentInput;
+  assist = currentInput;
   register(type,sub,line,scorer,assist);
 }
 
 function register(type,sub,line,scorer,assist){
+  let isOff = ['Zon 1','Zon 2','Zon 3','Zon 4'].includes(currentZone);
+  let team = isOff ? "IFK Gnesta" : opponentName;
 
-  var isOff=['Zon 1','Zon 2','Zon 3','Zon 4'].includes(currentZone);
-  var team=isOff?"IFK Gnesta":opponentName;
-
-  if(type==="Mål"){
-    if(team==="IFK Gnesta") scoreA++; else scoreB++;
+  if(type === "Mål"){
+    if(team === "IFK Gnesta") scoreA++; else scoreB++;
   }
 
-  score.innerText=scoreA+" - "+scoreB;
+  el('score').innerText = scoreA + " - " + scoreB;
 
-  var obj={zon:currentZone,typ:type,sub:sub,line:line,lag:team};
-  if(scorer) obj.målskytt=scorer;
-  if(assist) obj.assist=assist;
+  let obj = {zon: currentZone, typ: type, sub: sub, line: line, lag: team};
+  if(scorer) obj.målskytt = scorer;
+  if(assist) obj.assist = assist;
 
   stats.push(obj);
   periodStats[period].push(obj);
-
   closePopup();
 }
 
 function nextPeriod(){
+  let data = periodStats[period];
+  let gA=0, gB=0, sA=0, sB=0, bA=0, bB=0;
 
-  var data=periodStats[period];
+  data.forEach(d=>{
+    if(d.typ === "Mål") d.lag === "IFK Gnesta" ? gA++ : gB++;
+    if(d.typ === "Skott") d.lag === "IFK Gnesta" ? sA++ : sB++;
+    if(d.typ === "Skott i täck") d.lag === "IFK Gnesta" ? bA++ : bB++;
+  });
 
-  var goalsA=0, goalsB=0;
-  var shotsA=0, shotsB=0;
-  var blockedA=0, blockedB=0;
-
-  for(var i=0;i<data.length;i++){
-
-    var team = data[i].lag;
-
-    if(data[i].typ==="Mål"){
-      if(team==="IFK Gnesta") goalsA++; else goalsB++;
-    }
-
-    if(data[i].typ==="Skott"){
-      if(team==="IFK Gnesta") shotsA++; else shotsB++;
-    }
-
-    if(data[i].typ==="Skott i täck"){
-      if(team==="IFK Gnesta") blockedA++; else blockedB++;
-    }
-  }
-
-  statContent.innerHTML=
+  el('statContent').innerHTML=
     "<b>Period "+period+"</b><br>"+
     "Ställning: "+scoreA+" - "+scoreB+"<br><br>"+
+    "<b>IFK Gnesta</b><br>Mål: "+gA+"<br>Skott: "+sA+"<br>Täck: "+bA+
+    "<br><br><b>"+opponentName+"</b><br>Mål: "+gB+"<br>Skott: "+sB+"<br>Täck: "+bB;
 
-    "<b>IFK Gnesta</b><br>"+
-    "Mål: "+goalsA+"<br>"+
-    "Avslut på mål: "+shotsA+"<br>"+
-    "Täckta skott: "+blockedA+"<br><br>"+
-
-    "<b>"+opponentName+"</b><br>"+
-    "Mål: "+goalsB+"<br>"+
-    "Avslut på mål: "+shotsB+"<br>"+
-    "Täckta skott: "+blockedB;
-
-  statPopup.style.display="block";
-  statOverlay.style.display="block";
-
+  el('statPopup').style.display = "block";
+  el('statOverlay').style.display = "block";
   startTimer();
 }
 
 function startNextPeriod(){
   stopTimer();
-
   period++;
-  if(period>3){alert("Match slut!");return;}
-  periodDisplay.innerText="Period "+period;
-  statPopup.style.display="none";
-  statOverlay.style.display="none";
+  if(period > 3) return alert("Match slut!");
+  el('periodDisplay').innerText = "Period " + period;
+  el('statPopup').style.display = "none";
+  el('statOverlay').style.display = "none";
 }
 
 function exportExcel(){
-  var wb=XLSX.utils.book_new();
+
+ var wb=XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(stats),"Totalt");
   XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(periodStats[1]),"Period 1");
   XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(periodStats[2]),"Period 2");
   XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(periodStats[3]),"Period 3");
-  XLSX.writeFile(wb,"match_"+Date.now()+".xlsx");
+ // Hämta dagens datum i formatet ÅÅÅÅ-MM-DD
+  let today = new Date();
+  let dateString = today.toISOString().split('T')[0];
+  
+  // Om motståndare av någon anledning är tomt, sätt en fallback
+  let safeOpponent = opponentName ? opponentName : "Okänd";
+  
+  // Skapa det dynamiska filnamnet
+  let fileName = `IFK Gnesta vs ${safeOpponent} ${dateString}.xlsx`;
+  
+  XLSX.writeFile(wb, fileName);
+
 }
 </script>
 
